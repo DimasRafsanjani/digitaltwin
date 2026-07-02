@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 const server = http.createServer(app);
@@ -49,11 +50,49 @@ let db;
   console.log("[DATABASE] SQLite siap di ~/backend/database.db");
 })();
 
+const SECRET_KEY = "TwinSecr3tK3y_2026";
+
 // Endpoint API untuk ESP32 mengirim data (HTTP POST)
 app.post('/api/sensor', async (req, res) => {
+  const signature = req.headers['x-signature'];
+  const timestamp = req.headers['x-timestamp'];
   const { suhu_udara, kelembapan_udara, suhu_air, kelembapan_tanah, tds_nutrisi, intensitas_cahaya } = req.body;
 
-  console.log("\n[API] Menerima data sensor baru:", req.body);
+  // 1. Validasi keberadaan header keamanan
+  if (!signature || !timestamp) {
+    console.log("[SECURITY] Percobaan akses ditolak: Missing Signature or Timestamp!");
+    return res.status(401).json({ status: "error", message: "Unauthorized: Missing Signature or Timestamp" });
+  }
+
+  // 2. Validasi Selisih Waktu (Anti-Replay Attack)
+  // Menolak data yang dikirim lebih dari 60 detik yang lalu
+  const serverTime = Math.floor(Date.now() / 1000);
+  const timeDifference = Math.abs(serverTime - Number(timestamp));
+  if (timeDifference > 60) {
+    console.log(`[SECURITY] Percobaan akses ditolak: Timestamp expired! Selisih: ${timeDifference} detik.`);
+    return res.status(401).json({ status: "error", message: "Unauthorized: Timestamp expired/invalid. Please sync time." });
+  }
+
+  // 3. Rekonstruksi Pesan untuk verifikasi tanda tangan
+  // Format pesan disepakati: timestamp:suhu_udara:kelembapan_udara:suhu_air:kelembapan_tanah:tds_nutrisi:intensitas_cahaya
+  const messageToSign = `${timestamp}:${Number(suhu_udara).toFixed(1)}:${Number(kelembapan_udara).toFixed(1)}:${Number(suhu_air).toFixed(1)}:${parseInt(kelembapan_tanah)}:${parseInt(tds_nutrisi)}:${Number(intensitas_cahaya).toFixed(1)}`;
+
+  // 4. Hitung HMAC-SHA256
+  const computedSignature = crypto
+    .createHmac('sha256', SECRET_KEY)
+    .update(messageToSign)
+    .digest('hex');
+
+  // 5. Cocokkan tanda tangan
+  if (computedSignature !== signature) {
+    console.log("[SECURITY] Percobaan akses ditolak: Invalid Digital Signature!");
+    console.log("Pesan yang ditandatangani:", messageToSign);
+    console.log("Signature dari klien:   ", signature);
+    console.log("Signature dari server:  ", computedSignature);
+    return res.status(401).json({ status: "error", message: "Unauthorized: Invalid Digital Signature" });
+  }
+
+  console.log("\n[API] Menerima data sensor baru (Authorized via HMAC-SHA256):", req.body);
 
   try {
     // 1. Simpan ke database
