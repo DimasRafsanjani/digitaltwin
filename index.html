@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -516,6 +517,44 @@
 
     updateUI();
     animate();
+
+    // --- WebSocket Real-time Integration ---
+    // Menghubungkan secara dinamis ke server yang menyajikan halaman web ini
+    const socket = io();
+
+    socket.on("connect", () => {
+        console.log("[WS] Terhubung ke server WebSocket!");
+        document.getElementById('stage-display').innerText = 'Live Feed Connected';
+    });
+
+    socket.on("disconnect", () => {
+        console.log("[WS] Koneksi WebSocket terputus.");
+        document.getElementById('stage-display').innerText = 'Feed Offline';
+    });
+
+    socket.on("sensorUpdate", (data) => {
+        console.log("[WS] Menerima data sensor baru dari server:", data);
+
+        // Perbarui state parameter 3D padi
+        S.moisture = data.kelembapan_tanah;
+        S.tds = data.tds_nutrisi;
+        S.light = data.intensitas_cahaya;
+        S.atemp = data.suhu_udara;
+        S.humi = data.kelembapan_udara;
+        S.wtemp = data.suhu_air;
+
+        // Render ulang tanaman padi & update teks status di sidebar
+        buildPlant();
+        updateUI();
+
+        // Geser posisi slider secara otomatis di dashboard mengikuti data sensor
+        document.getElementById('slider-moisture').value = S.moisture;
+        document.getElementById('slider-tds').value = S.tds;
+        document.getElementById('slider-light').value = S.light;
+        document.getElementById('slider-atemp').value = S.atemp;
+        document.getElementById('slider-humi').value = S.humi;
+        document.getElementById('slider-wtemp').value = S.wtemp;
+    });
     </script>
 </body>
 </html>
