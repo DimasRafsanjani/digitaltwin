@@ -1,0 +1,15 @@
+{
+  "name": "digital-twin-backend",
+  "version": "1.0.0",
+  "description": "Backend server for Rice Digital Twin skripsi project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  }
+}

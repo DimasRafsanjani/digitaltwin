@@ -1,0 +1,10 @@
+node_modules/
+backend/node_modules/
+backend/database.db
+backend/database.db-journal
+.DS_Store
+.vscode/
+*.log
+
+*.md
+*.ino
