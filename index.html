@@ -500,7 +500,10 @@
     function updateUI() {
         document.getElementById('val-moisture').innerText = S.moisture + "%";
         document.getElementById('val-tds').innerText = S.tds + " ppm";
-        document.getElementById('val-light').innerText = (S.light / 1000).toFixed(1) + "k lux";
+        
+        const lightText = S.light >= 1000 ? (S.light / 1000).toFixed(1) + "k lux" : S.light + " lux";
+        document.getElementById('val-light').innerText = lightText;
+        
         document.getElementById('val-env').innerText = S.atemp + "°C / " + S.humi + "%";
         document.getElementById('val-wtemp').innerText = S.wtemp + " °C";
         
