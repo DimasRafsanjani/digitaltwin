@@ -8,3 +8,5 @@ backend/database.db-journal
 
 *.md
 *.ino
+*.docx
+*.txt
