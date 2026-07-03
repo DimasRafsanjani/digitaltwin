@@ -1,8 +1,8 @@
 {
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "vite -c frontend/vite.config.js",
+    "build": "vite build -c frontend/vite.config.js",
+    "preview": "vite preview -c frontend/vite.config.js"
   },
   "dependencies": {
     "three": "^0.182.0"
