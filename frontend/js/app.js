@@ -70,9 +70,7 @@
         new THREE.CircleGeometry(3.5, 32),
         new THREE.MeshStandardMaterial({ 
             color: 0x17110a, 
-            roughness: 0.95,
-            transparent: true,
-            opacity: 0.25
+            roughness: 1.0
         })
     );
     ground.rotation.x = -Math.PI / 2;
@@ -90,7 +88,7 @@
 
     // Inisiasi awal status
     console.log('Procedural L-System Rice Plant Generator Active.');
-    document.getElementById('stage-display').innerText = 'Vegetative Phase';
+    document.getElementById('stage-display').innerText = 'Fase Vegetatif';
 
     // --- PROCEDURAL GENERATION: LEAF L-SYSTEM ---
     function createLeaf(length, width, color, wiltAngle, heightRatio) {
@@ -301,7 +299,7 @@
         rootGroup.clear();
 
         // Tentukan Fase Pertumbuhan
-        let phase = S.age >= 90 ? "Ripening Stage" : (S.age >= 60 ? "Reproductive Phase" : "Vegetative Phase");
+        let phase = S.age >= 90 ? "Fase Pematangan" : (S.age >= 60 ? "Fase Reproduktif" : "Fase Vegetatif");
         document.getElementById('stage-display').innerText = phase;
 
         // === 1. ARAS / KECEPATAN TUMBUH (USIA & SUHU) ===
