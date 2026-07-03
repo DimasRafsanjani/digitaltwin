@@ -92,8 +92,66 @@ header h1 {
 }
 
 .sensor-card:hover::before {
-  opacity: 1;
 }
+
+/* --- LOGIN PAGE STYLING --- */
+.login-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #0a0d12;
+}
+.login-box {
+  background: #131921;
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid #2a3547;
+  width: 320px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.login-box h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.login-box input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  background: #0c1015;
+  border: 1px solid #2a3547;
+  color: #fff;
+  border-radius: 6px;
+  box-sizing: border-box;
+  font-family: 'Outfit', sans-serif;
+}
+.login-box button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+}
+#btn-login {
+  background: #2b6cb0;
+  color: #fff;
+  margin-bottom: 10px;
+}
+#btn-register {
+  background: transparent;
+  color: #a0aec0;
+  border: 1px solid #2a3547;
+}
+#login-error, #login-success {
+  font-size: 0.85rem;
+  margin-bottom: 15px;
+  text-align: center;
+  display: none;
+}
+#login-error { color: #ff5252; }
+#login-success { color: #4caf50; }
 
 .sensor-card label {
   display: block;
