@@ -1,12 +1,40 @@
+# Dependencies
 node_modules/
 backend/node_modules/
-backend/database.db
-backend/database.db-journal
-.DS_Store
-.vscode/
+frontend/node_modules/
+
+# Build & Logs
+dist/
+dist-ssr/
+*.local
 *.log
 
+# Database
+backend/database.db
+backend/database.db-journal
+backend/database.sqlite
+*.sqlite3
+*.db
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Skripsi Documents & Scripts (Biar tidak ikut ter-push ke server)
 *.md
-*.ino
 *.docx
 *.txt
+*.pptx
+*.py
+*.mermaid
+images/
+referensi/
+
+# Hardware / Non-Web
+esp32_node_sawah/
+esp32_sensor_test/
+*.ino

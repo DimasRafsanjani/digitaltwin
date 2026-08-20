@@ -1,5 +1,5 @@
 import { S, realData, AppState } from './state.js';
-import { updateDeviceStatus, updateUI, updateAgeFromPlantingDate } from './ui.js';
+import { updateDeviceStatus, updateUI, updateAgeFromPlantingDate, updateHealthUI, updateLastTimestamp } from './ui.js';
 import { buildPlant } from './3d-engine.js';
 
 let socket;
@@ -31,11 +31,15 @@ export function initWebSocket() {
     });
 
     socket.on("sensorUpdate", (data) => {
-        updateDeviceStatus(true);
+        const timestamp = data.timestamp || (data.created_at ? data.created_at.replace(" ", "T") + "Z" : null);
+        
+        updateDeviceStatus(true, timestamp);
+        updateLastTimestamp(timestamp);
+        
         clearTimeout(AppState.deviceTimeout);
         AppState.deviceTimeout = setTimeout(() => {
             updateDeviceStatus(false);
-        }, 15000);
+        }, 15000); // 15 detik (untuk kebutuhan demo cepat, jika simulator dimatikan status berubah offline)
 
         console.log("[WS] Menerima data sensor baru dari server:", data);
 
@@ -45,6 +49,8 @@ export function initWebSocket() {
         realData.atemp = data.suhu_udara;
         realData.humi = data.kelembapan_udara;
         realData.wtemp = data.suhu_air;
+        realData.battery = data.baterai;
+        realData.sensor_status = data.sensor_status;
 
         const isSimulation = document.getElementById('btn-reset-real').style.display === 'block';
         if (!isSimulation) {
@@ -54,9 +60,12 @@ export function initWebSocket() {
             S.atemp = realData.atemp;
             S.humi = realData.humi;
             S.wtemp = realData.wtemp;
+            S.battery = realData.battery;
+            S.sensor_status = realData.sensor_status;
 
             buildPlant();
             updateUI();
+            updateHealthUI(S.battery, S.sensor_status);
 
             document.getElementById('slider-moisture').value = S.moisture;
             document.getElementById('slider-tds').value = S.tds;

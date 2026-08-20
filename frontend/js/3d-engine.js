@@ -59,27 +59,6 @@ export function initScene() {
 
     // Inisiasi awal status
     console.log('Procedural L-System Rice Plant Generator Active.');
-    let deviceStatus = "Menunggu Data...";
-    let deviceTimeout;
-
-    function updateDeviceStatus(isOnline) {
-        const badge = document.getElementById('stage-display');
-        if (!badge) return;
-
-        if (isOnline) {
-            deviceStatus = "Alat: Online";
-            badge.style.background = "#3cf08d";
-            badge.style.color = "#000";
-        } else {
-            deviceStatus = "Alat: Online";
-            badge.style.background = "#ff5252";
-            badge.style.color = "#fff";
-        }
-        const phase = S.age >= 90 ? "Fase Pematangan" : (S.age >= 60 ? "Fase Reproduktif" : "Fase Vegetatif");
-        badge.innerText = phase + " | " + deviceStatus;
-    }
-
-    updateDeviceStatus(false);
 
     // --- PROCEDURAL GENERATION: LEAF L-SYSTEM ---
 
@@ -208,6 +187,10 @@ function createPanicle(length, radius, S) {
 function createTiller(height, baseRadius, color, S, sunPos, leanFactor) {
     const tillerGroup = new THREE.Group();
 
+    // Hitung faktor peregangan etiolasi untuk menjaga daun & malai tetap proporsional normal
+    const yStretch = S.light < 5000 ? THREE.MathUtils.mapLinear(S.light, 0, 5000, 1.8, 1.0) : 1.0;
+    const normalHeight = height / yStretch;
+
     // Jumlah ruas bertambah seiring umur
     const segments = Math.floor(THREE.MathUtils.mapLinear(S.age, 1, 60, 2, 5));
     const segLen = height / segments;
@@ -246,8 +229,8 @@ function createTiller(height, baseRadius, color, S, sunPos, leanFactor) {
             const ratio = i / segments;
             const leafAngle = (i % 2 === 0) ? Math.PI / 4 : -Math.PI / 4;
 
-            // Daun bawah jauh lebih panjang daripada daun atas
-            const leafLen = height * 0.58 * (1.0 - ratio * 0.5);
+            // Daun bawah jauh lebih panjang daripada daun atas (menggunakan normalHeight)
+            const leafLen = normalHeight * 0.58 * (1.0 - ratio * 0.5);
             // Daun bawah lebih lebar, daun atas lebih ramping
             const leafWidth = Math.max(currentRadius * (8.5 - ratio * 4.5), 0.038);
             const activeWilt = S.moisture < 45 ? THREE.MathUtils.mapLinear(S.moisture, 0, 45, 1.3, 0) : 0.0;
@@ -277,9 +260,9 @@ function createTiller(height, baseRadius, color, S, sunPos, leanFactor) {
         currentParent = joint;
     }
 
-    // Tambah Malai di ujung atas setelah umur 60 hari
+    // Tambah Malai di ujung atas setelah umur 60 hari (menggunakan normalHeight)
     if (S.age > 60) {
-        const panicle = createPanicle(height * 0.28, baseRadius * 0.75, S);
+        const panicle = createPanicle(normalHeight * 0.28, baseRadius * 0.75, S);
         panicle.position.y = segLen;
         currentParent.add(panicle);
     }

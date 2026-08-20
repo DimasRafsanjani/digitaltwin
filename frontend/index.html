@@ -60,6 +60,32 @@
             <div class="sidebar-section" style="margin-top: 25px;">
                 <h3
                     style="color: #88aaff; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase; margin: 0 0 15px 0; border-bottom: 1px solid #1a222f; padding-bottom: 8px;">
+                    Kesehatan Sistem (Node Sawah)</h3>
+                <div class="sensor-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="sensor-card">
+                        <label>Sisa Baterai</label>
+                        <span class="value" id="val-battery" style="color: #94a3b8;">--%</span>
+                        <div class="unit">18650 Li-Ion</div>
+                    </div>
+                    <div class="sensor-card">
+                        <label>Koneksi ESP32</label>
+                        <span class="value" id="val-esp-status" style="color: #94a3b8; font-size: 1.1rem;">Waiting...</span>
+                        <div class="unit">GPRS / WiFi</div>
+                    </div>
+                    <div class="sensor-card">
+                        <label>Status Sensor</label>
+                        <span class="value" id="val-sensor-status" style="color: #94a3b8; font-size: 1.1rem;">Waiting...</span>
+                        <div class="unit">Koneksi Kabel</div>
+                    </div>
+                </div>
+                <div id="val-last-update" style="font-size: 0.75rem; color: #64748b; margin-top: 12px; text-align: right; font-style: italic;">
+                    Terakhir Update: Belum ada data
+                </div>
+            </div>
+
+            <div class="sidebar-section" style="margin-top: 25px;">
+                <h3
+                    style="color: #88aaff; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase; margin: 0 0 15px 0; border-bottom: 1px solid #1a222f; padding-bottom: 8px;">
                     Simulasi Pertumbuhan</h3>
 
                 <div class="controls">
@@ -68,31 +94,31 @@
                         Reset ke Data Real-Time
                     </button>
                     <div class="control-group">
-                        <label>Umur Tumbuh (Hari 1-120)</label>
+                        <label>Umur Tumbuh (Hari 1-120) <span id="slider-age-val" style="float: right; color: #88aaff; font-weight: 600;">60</span></label>
                         <input type="range" id="slider-age" min="1" max="120" value="60">
                     </div>
                     <div class="control-group">
-                        <label>Kelembapan Tanah (%) [Wilt/Roots]</label>
+                        <label>Kelembapan Tanah (%) [Wilt/Roots] <span id="slider-moisture-val" style="float: right; color: #88aaff; font-weight: 600;">85</span></label>
                         <input type="range" id="slider-moisture" min="0" max="100" value="85">
                     </div>
                     <div class="control-group">
-                        <label>Suhu Udara (°C) [Growth/Color]</label>
+                        <label>Suhu Udara (°C) [Growth/Color] <span id="slider-atemp-val" style="float: right; color: #88aaff; font-weight: 600;">28</span></label>
                         <input type="range" id="slider-atemp" min="0" max="50" value="28">
                     </div>
                     <div class="control-group">
-                        <label>Kelembapan Udara (%) [Fog/Stem/Fruit]</label>
+                        <label>Kelembapan Udara (%) [Fog/Stem/Fruit] <span id="slider-humi-val" style="float: right; color: #88aaff; font-weight: 600;">65</span></label>
                         <input type="range" id="slider-humi" min="0" max="100" value="65">
                     </div>
                     <div class="control-group">
-                        <label>Nutrisi (TDS ppm) [Chlorosis/Fruit]</label>
+                        <label>Nutrisi (TDS ppm) [Chlorosis/Fruit] <span id="slider-tds-val" style="float: right; color: #88aaff; font-weight: 600;">600</span></label>
                         <input type="range" id="slider-tds" min="0" max="2000" value="600">
                     </div>
                     <div class="control-group">
-                        <label>Cahaya (Lux) [Phototropism/Etiolation]</label>
-                        <input type="range" id="slider-light" min="0" max="100000" value="12000">
+                        <label>Cahaya (Lux) [Phototropism/Etiolation] <span id="slider-light-val" style="float: right; color: #88aaff; font-weight: 600;">12000</span></label>
+                        <input type="range" id="slider-light" min="0" max="40000" value="12000">
                     </div>
                     <div class="control-group">
-                        <label>Suhu Air (°C) [Roots]</label>
+                        <label>Suhu Air (°C) [Roots] <span id="slider-wtemp-val" style="float: right; color: #88aaff; font-weight: 600;">26</span></label>
                         <input type="range" id="slider-wtemp" min="0" max="50" value="26">
                     </div>
                     <button id="toggle-soil" class="toggle-btn active">Toggle Media Tanah</button>

@@ -48,6 +48,8 @@ let db;
       kelembapan_tanah INTEGER,
       tds_nutrisi INTEGER,
       intensitas_cahaya REAL,
+      baterai INTEGER,
+      sensor_status BOOLEAN,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -69,6 +71,10 @@ let db;
   } catch (e) {
     // Kolom sudah ada, abaikan
   }
+  
+  // Migrasi database untuk baterai & status
+  try { await db.exec("ALTER TABLE sensor_logs ADD COLUMN baterai INTEGER"); } catch(e){}
+  try { await db.exec("ALTER TABLE sensor_logs ADD COLUMN sensor_status BOOLEAN"); } catch(e){}
 
   console.log("[DATABASE] SQLite siap di ~/backend/database.db");
 })();
@@ -160,11 +166,26 @@ io.use((socket, next) => {
   });
 });
 
+// --- HANDLE WEBSOCKET CONNECTION EVENT ---
+// Mengirim data sensor terakhir dari database begitu klien terhubung
+io.on('connection', async (socket) => {
+  console.log(`[WS] Klien terhubung: ${socket.user?.username || 'Guest'} (ID: ${socket.id})`);
+  try {
+    const row = await db.get("SELECT * FROM sensor_logs ORDER BY id DESC LIMIT 1");
+    if (row) {
+      // Kirim data terakhir agar tampilan dasbor web klien langsung terisi (tidak menunggu 10 menit)
+      socket.emit('sensorUpdate', row);
+    }
+  } catch (err) {
+    console.error("[WS] Gagal mengirim data awal ke klien:", err.message);
+  }
+});
+
 // Endpoint API untuk ESP32 mengirim data (HTTP POST)
 app.post('/api/sensor', async (req, res) => {
   const signature = req.headers['x-signature'];
   const timestamp = req.headers['x-timestamp'];
-  const { suhu_udara, kelembapan_udara, suhu_air, kelembapan_tanah, tds_nutrisi, intensitas_cahaya } = req.body;
+  const { suhu_udara, kelembapan_udara, suhu_air, kelembapan_tanah, tds_nutrisi, intensitas_cahaya, baterai, sensor_status } = req.body;
 
   // 1. Validasi keberadaan header keamanan
   if (!signature || !timestamp) {
@@ -182,8 +203,7 @@ app.post('/api/sensor', async (req, res) => {
   }
 
   // 3. Rekonstruksi Pesan untuk verifikasi tanda tangan
-  // Format pesan disepakati: timestamp:suhu_udara:kelembapan_udara:suhu_air:kelembapan_tanah:tds_nutrisi:intensitas_cahaya
-  const messageToSign = `${timestamp}:${Number(suhu_udara).toFixed(1)}:${Number(kelembapan_udara).toFixed(1)}:${Number(suhu_air).toFixed(1)}:${parseInt(kelembapan_tanah)}:${parseInt(tds_nutrisi)}:${Number(intensitas_cahaya).toFixed(1)}`;
+  const messageToSign = `${timestamp}:${Number(suhu_udara).toFixed(1)}:${Number(kelembapan_udara).toFixed(1)}:${Number(suhu_air).toFixed(1)}:${parseInt(kelembapan_tanah)}:${parseInt(tds_nutrisi)}:${Number(intensitas_cahaya).toFixed(1)}:${parseInt(baterai)}:${sensor_status === true || sensor_status === "true" ? "1" : "0"}`;
 
   // 4. Hitung HMAC-SHA256
   const computedSignature = crypto
@@ -205,9 +225,9 @@ app.post('/api/sensor', async (req, res) => {
   try {
     // 1. Simpan ke database
     await db.run(
-      `INSERT INTO sensor_logs (suhu_udara, kelembapan_udara, suhu_air, kelembapan_tanah, tds_nutrisi, intensitas_cahaya) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [suhu_udara, kelembapan_udara, suhu_air, kelembapan_tanah, tds_nutrisi, intensitas_cahaya]
+      `INSERT INTO sensor_logs (suhu_udara, kelembapan_udara, suhu_air, kelembapan_tanah, tds_nutrisi, intensitas_cahaya, baterai, sensor_status) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [suhu_udara, kelembapan_udara, suhu_air, kelembapan_tanah, tds_nutrisi, intensitas_cahaya, baterai, sensor_status]
     );
 
     // 2. Broadcast ke semua browser terhubung via WebSockets
@@ -218,6 +238,9 @@ app.post('/api/sensor', async (req, res) => {
       kelembapan_tanah,
       tds_nutrisi,
       intensitas_cahaya,
+      baterai,
+      sensor_status,
+      esp_status: true,
       timestamp: new Date().toISOString()
     });
 

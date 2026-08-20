@@ -7,7 +7,9 @@ export const S = {
     humi: 65,
     wtemp: 26,
     age: 60,
-    roots: true
+    roots: true,
+    battery: 100,
+    sensor_status: true
 };
 
 // --- Last Known Real-Time Sensor Data from ESP32 ---
@@ -17,7 +19,9 @@ export const realData = {
     light: 12000,
     atemp: 28,
     humi: 65,
-    wtemp: 26
+    wtemp: 26,
+    battery: 100,
+    sensor_status: true
 };
 
 // --- Global UI State ---
