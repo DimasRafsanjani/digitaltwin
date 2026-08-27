@@ -229,10 +229,10 @@ function createTiller(height, baseRadius, color, S, sunPos, leanFactor) {
             const ratio = i / segments;
             const leafAngle = (i % 2 === 0) ? Math.PI / 4 : -Math.PI / 4;
 
-            // Daun bawah jauh lebih panjang daripada daun atas (menggunakan normalHeight)
-            const leafLen = normalHeight * 0.58 * (1.0 - ratio * 0.5);
-            // Daun bawah lebih lebar, daun atas lebih ramping
-            const leafWidth = Math.max(currentRadius * (8.5 - ratio * 4.5), 0.038);
+            // Daun padi panjang dan meruncing (grass-like)
+            const leafLen = normalHeight * 0.85 * (1.0 - ratio * 0.3);
+            // Daun padi sempit memanjang
+            const leafWidth = Math.max(currentRadius * 5.0, 0.018);
             const activeWilt = S.moisture < 45 ? THREE.MathUtils.mapLinear(S.moisture, 0, 45, 1.3, 0) : 0.0;
 
             // 1. Tambah Pelepah Daun (Leaf Sheath) untuk membungkus batang
@@ -250,8 +250,8 @@ function createTiller(height, baseRadius, color, S, sunPos, leanFactor) {
             leaf.position.y = segLen;
             leaf.rotation.y = leafAngle + (Math.random() - 0.5) * 0.25;
 
-            // Daun bawah lebih condong keluar (-0.45), daun atas lebih tegak lurus ke atas (-0.80)
-            leaf.rotation.x = -0.45 - ratio * 0.35;
+            // Daun padi tumbuh lurus ke atas (-1.25 rad) lalu baru melengkung di ujungnya
+            leaf.rotation.x = -1.25 + (ratio * 0.2);
 
             joint.add(leaf);
         }
@@ -321,12 +321,12 @@ export function buildPlant() {
     // === 4. GENERATE RUMPUN PADI ---
     const finalHeight = growthScale * yStretch * 3.6;
     const tdsThickness = THREE.MathUtils.mapLinear(S.tds, 0, 2000, 0.55, 1.25);
-    const finalRadius = 0.02 * xzStretch * tdsThickness;
+    const finalRadius = 0.008 * xzStretch * tdsThickness; // Batang padi ramping/kurus
 
     for (let t = 0; t < tillers; t++) {
         const angle = (t / tillers) * Math.PI * 2;
-        // Rumpun tumbuh sangat rapat di pangkal tanah (seolah tumbuh dari 1 titik benih)
-        const spreadRadius = (tillers === 1) ? 0 : 0.012 + (t * 0.006);
+        // Rumpun tumbuh sangat rapat berdesakan (khas rumput)
+        const spreadRadius = (tillers === 1) ? 0 : 0.005 + (t * 0.003);
 
         // Generate anakan prosedural
         const tiller = createTiller(finalHeight, finalRadius, plantCol, S, sunPos, leanFactor);
@@ -334,8 +334,8 @@ export function buildPlant() {
 
         // yaw (Y) memutarkan anakan, pitch (X) mencondongkan anakan keluar secara radial
         tiller.rotation.y = angle + (Math.random() - 0.5) * 0.15;
-        // Semakin luar anakan, semakin condong keluar agar membentuk rumpun mekar
-        const tiltAngle = (tillers === 1) ? 0.03 : 0.15 + (t * 0.02);
+        // Anakan padi tumbuh lurus tegak ke atas, tidak terlalu mekar
+        const tiltAngle = (tillers === 1) ? 0.01 : 0.06 + (t * 0.015);
         tiller.rotation.x = tiltAngle;
 
         plantGroup.add(tiller);

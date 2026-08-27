@@ -50,12 +50,12 @@ export function updateDeviceStatus(status, timestamp) {
             espStatus.style.color = "#4ade80";
         }
     } else if (status === "offline" || status === false) {
-        AppState.deviceStatus = "Alat: OFFLINE";
-        badge.style.background = "#ff5252";
-        badge.style.color = "#fff";
+        AppState.deviceStatus = "Alat: DEEP SLEEP";
+        badge.style.background = "#f59e0b"; // Oranye (bukan merah)
+        badge.style.color = "#000";
         if(espStatus) {
-            espStatus.innerText = "Offline";
-            espStatus.style.color = "#ef4444";
+            espStatus.innerText = "Deep Sleep";
+            espStatus.style.color = "#f59e0b";
         }
     } else {
         AppState.deviceStatus = "Menunggu Data...";
@@ -262,7 +262,7 @@ export function initUI() {
             updateUI();
             
             const espOnline = AppState.deviceStatus.includes("ONLINE");
-            const espOffline = AppState.deviceStatus.includes("OFFLINE");
+            const espOffline = AppState.deviceStatus.includes("DEEP SLEEP");
             updateDeviceStatus(espOnline ? "online" : (espOffline ? "offline" : "waiting"));
             updateHealthUI(S.battery, S.sensor_status);
             btnResetReal.style.display = 'none';

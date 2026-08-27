@@ -39,7 +39,7 @@ export function initWebSocket() {
         clearTimeout(AppState.deviceTimeout);
         AppState.deviceTimeout = setTimeout(() => {
             updateDeviceStatus(false);
-        }, 15000); // 15 detik (untuk kebutuhan demo cepat, jika simulator dimatikan status berubah offline)
+        }, 15000); // 15 detik sesuai pengujian di skripsi
 
         console.log("[WS] Menerima data sensor baru dari server:", data);
 

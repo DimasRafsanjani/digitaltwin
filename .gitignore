@@ -38,3 +38,6 @@ referensi/
 esp32_node_sawah/
 esp32_sensor_test/
 *.ino
+
+/groundtruth
+
