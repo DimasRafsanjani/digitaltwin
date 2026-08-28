@@ -455,7 +455,6 @@ export function buildPlant() {
             createRootSegment(end, lateralDir, depth + 2, mat, S, branchProb);
         }
     }
-}
 
 // --- Animation ---
 export function animate() {
