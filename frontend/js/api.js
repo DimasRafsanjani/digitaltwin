@@ -26,7 +26,7 @@ export function initWebSocket() {
         if (err.message.includes("Authentication error")) {
             localStorage.removeItem('jwt_token');
             const overlay = document.getElementById('login-overlay');
-            if(overlay) overlay.style.display = 'flex';
+            if (overlay) overlay.style.display = 'flex';
         }
     });
 
@@ -35,50 +35,50 @@ export function initWebSocket() {
 
 // --- FUNGSI CLASS DIAGRAM ---
 export function LihatMonitoring(data) {
-        const timestamp = data.timestamp || (data.created_at ? data.created_at.replace(" ", "T") + "Z" : null);
-        
-        updateDeviceStatus(true, timestamp);
-        updateLastTimestamp(timestamp);
-        
-        clearTimeout(AppState.deviceTimeout);
-        AppState.deviceTimeout = setTimeout(() => {
-            updateDeviceStatus(false);
-        }, 15000); // 15 detik sesuai pengujian di skripsi
+    const timestamp = data.timestamp || (data.created_at ? data.created_at.replace(" ", "T") + "Z" : null);
 
-        console.log("[WS] Menerima data sensor baru dari server:", data);
+    updateDeviceStatus(true, timestamp);
+    updateLastTimestamp(timestamp);
 
-        realData.moisture = data.kelembapan_tanah;
-        realData.tds = data.tds_nutrisi;
-        realData.light = data.intensitas_cahaya;
-        realData.atemp = data.suhu_udara;
-        realData.humi = data.kelembapan_udara;
-        realData.wtemp = data.suhu_air;
-        realData.battery = data.baterai;
-        realData.sensor_status = data.sensor_status;
+    clearTimeout(AppState.deviceTimeout);
+    AppState.deviceTimeout = setTimeout(() => {
+        updateDeviceStatus(false);
+    }, 15000); // 15 detik sesuai pengujian di skripsi
 
-        const isSimulation = document.getElementById('btn-reset-real').style.display === 'block';
-        if (!isSimulation) {
-            S.moisture = realData.moisture;
-            S.tds = realData.tds;
-            S.light = realData.light;
-            S.atemp = realData.atemp;
-            S.humi = realData.humi;
-            S.wtemp = realData.wtemp;
-            S.battery = realData.battery;
-            S.sensor_status = realData.sensor_status;
+    console.log("[WS] Menerima data sensor baru dari server:", data);
 
-            buildPlant();
-            updateUI();
-            updateHealthUI(S.battery, S.sensor_status);
+    realData.moisture = data.kelembapan_tanah;
+    realData.tds = data.tds_nutrisi;
+    realData.light = data.intensitas_cahaya;
+    realData.atemp = data.suhu_udara;
+    realData.humi = data.kelembapan_udara;
+    realData.wtemp = data.suhu_air;
+    realData.battery = data.baterai;
+    realData.sensor_status = data.sensor_status;
 
-            document.getElementById('slider-moisture').value = S.moisture;
-            document.getElementById('slider-tds').value = S.tds;
-            document.getElementById('slider-light').value = S.light;
-            document.getElementById('slider-atemp').value = S.atemp;
-            document.getElementById('slider-humi').value = S.humi;
-            document.getElementById('slider-wtemp').value = S.wtemp;
-        }
+    const isSimulation = document.getElementById('btn-reset-real').style.display === 'block';
+    if (!isSimulation) {
+        S.moisture = realData.moisture;
+        S.tds = realData.tds;
+        S.light = realData.light;
+        S.atemp = realData.atemp;
+        S.humi = realData.humi;
+        S.wtemp = realData.wtemp;
+        S.battery = realData.battery;
+        S.sensor_status = realData.sensor_status;
+
+        buildPlant();
+        updateUI();
+        updateHealthUI(S.battery, S.sensor_status);
+
+        document.getElementById('slider-moisture').value = S.moisture;
+        document.getElementById('slider-tds').value = S.tds;
+        document.getElementById('slider-light').value = S.light;
+        document.getElementById('slider-atemp').value = S.atemp;
+        document.getElementById('slider-humi').value = S.humi;
+        document.getElementById('slider-wtemp').value = S.wtemp;
     }
+}
 
 export async function checkAuth() {
     const token = localStorage.getItem('jwt_token');
@@ -93,7 +93,7 @@ export async function checkAuth() {
                 if (data.planting_date) {
                     localStorage.setItem('planting_date', data.planting_date);
                     const dateInput = document.getElementById('input-planting-date');
-                    if(dateInput) dateInput.value = data.planting_date;
+                    if (dateInput) dateInput.value = data.planting_date;
                     updateAgeFromPlantingDate(data.planting_date);
                 }
             }
