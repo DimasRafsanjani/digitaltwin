@@ -79,7 +79,6 @@ export function LihatMonitoring(data) {
             document.getElementById('slider-wtemp').value = S.wtemp;
         }
     }
-}
 
 export async function checkAuth() {
     const token = localStorage.getItem('jwt_token');
