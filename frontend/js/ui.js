@@ -162,16 +162,19 @@ export function updateAgeFromPlantingDate(dateStr) {
 }
 
 export function initUI() {
+    // --- FUNGSI CLASS DIAGRAM ---
+    function SimulasiManual(e, k) {
+        S[k] = parseFloat(e.target.value); 
+        const resetBtn = document.getElementById('btn-reset-real');
+        if(resetBtn) resetBtn.style.display = 'block';
+        buildPlant(); 
+        updateUI();
+    }
+
     const bind = (id, k) => {
         const el = document.getElementById(id);
         if(!el) return;
-        el.addEventListener('input', e => {
-            S[k] = parseFloat(e.target.value); 
-            const resetBtn = document.getElementById('btn-reset-real');
-            if(resetBtn) resetBtn.style.display = 'block';
-            buildPlant(); 
-            updateUI();
-        });
+        el.addEventListener('input', e => SimulasiManual(e, k));
     };
     bind('slider-age', 'age');
     bind('slider-moisture', 'moisture');
@@ -188,7 +191,8 @@ export function initUI() {
         dateInput.addEventListener('click', () => {
             try { dateInput.showPicker(); } catch (err) {}
         });
-        dateInput.addEventListener('change', async e => {
+        // --- FUNGSI CLASS DIAGRAM ---
+        async function AturTanggalTanam(e) {
             const val = e.target.value;
             localStorage.setItem('planting_date', val);
             updateAgeFromPlantingDate(val);
@@ -202,7 +206,9 @@ export function initUI() {
                     });
                 } catch (err) {}
             }
-        });
+        }
+        
+        dateInput.addEventListener('change', AturTanggalTanam);
         
         const savedDate = localStorage.getItem('planting_date');
         if (savedDate) {
@@ -220,12 +226,15 @@ export function initUI() {
         }
     }
 
+    // --- FUNGSI CLASS DIAGRAM ---
+    function ToggleTanah(e) {
+        e.target.classList.toggle('active');
+        toggleSoil(e.target.classList.contains('active'));
+    }
+
     const toggleBtn = document.getElementById('toggle-soil');
     if(toggleBtn) {
-        toggleBtn.addEventListener('click', e => {
-            e.target.classList.toggle('active');
-            toggleSoil(e.target.classList.contains('active'));
-        });
+        toggleBtn.addEventListener('click', ToggleTanah);
     }
 
     const resetCamBtn = document.getElementById('reset-cam');
@@ -233,40 +242,44 @@ export function initUI() {
         resetCamBtn.addEventListener('click', () => resetCamera());
     }
 
+    // --- FUNGSI CLASS DIAGRAM ---
+    function ResetKeDataRiil() {
+        S.moisture = realData.moisture;
+        S.tds = realData.tds;
+        S.light = realData.light;
+        S.atemp = realData.atemp;
+        S.humi = realData.humi;
+        S.wtemp = realData.wtemp;
+        S.battery = realData.battery;
+        S.sensor_status = realData.sensor_status;
+
+        const savedDate = localStorage.getItem('planting_date');
+        if (savedDate) {
+            updateAgeFromPlantingDate(savedDate);
+        }
+
+        document.getElementById('slider-moisture').value = S.moisture;
+        document.getElementById('slider-tds').value = S.tds;
+        document.getElementById('slider-light').value = S.light;
+        document.getElementById('slider-atemp').value = S.atemp;
+        document.getElementById('slider-humi').value = S.humi;
+        document.getElementById('slider-wtemp').value = S.wtemp;
+
+        buildPlant();
+        updateUI();
+        
+        const espOnline = AppState.deviceStatus.includes("ONLINE");
+        const espOffline = AppState.deviceStatus.includes("DEEP SLEEP");
+        updateDeviceStatus(espOnline ? "online" : (espOffline ? "offline" : "waiting"));
+        updateHealthUI(S.battery, S.sensor_status);
+        
+        const btnResetReal = document.getElementById('btn-reset-real');
+        if (btnResetReal) btnResetReal.style.display = 'none';
+    }
+
     const btnResetReal = document.getElementById('btn-reset-real');
     if(btnResetReal) {
-        btnResetReal.addEventListener('click', () => {
-            S.moisture = realData.moisture;
-            S.tds = realData.tds;
-            S.light = realData.light;
-            S.atemp = realData.atemp;
-            S.humi = realData.humi;
-            S.wtemp = realData.wtemp;
-            S.battery = realData.battery;
-            S.sensor_status = realData.sensor_status;
-
-            const savedDate = localStorage.getItem('planting_date');
-            if (savedDate) {
-                updateAgeFromPlantingDate(savedDate);
-            }
-
-            document.getElementById('slider-moisture').value = S.moisture;
-            document.getElementById('slider-tds').value = S.tds;
-            document.getElementById('slider-light').value = S.light;
-            document.getElementById('slider-atemp').value = S.atemp;
-            document.getElementById('slider-humi').value = S.humi;
-            document.getElementById('slider-wtemp').value = S.wtemp;
-
-
-            buildPlant();
-            updateUI();
-            
-            const espOnline = AppState.deviceStatus.includes("ONLINE");
-            const espOffline = AppState.deviceStatus.includes("DEEP SLEEP");
-            updateDeviceStatus(espOnline ? "online" : (espOffline ? "offline" : "waiting"));
-            updateHealthUI(S.battery, S.sensor_status);
-            btnResetReal.style.display = 'none';
-        });
+        btnResetReal.addEventListener('click', ResetKeDataRiil);
     }
     
     // Set status awal ke waiting (menunggu data GPRS)

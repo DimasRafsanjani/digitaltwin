@@ -30,7 +30,8 @@ export function initWebSocket() {
         }
     });
 
-    socket.on("sensorUpdate", (data) => {
+    // --- FUNGSI CLASS DIAGRAM ---
+    function LihatMonitoring(data) {
         const timestamp = data.timestamp || (data.created_at ? data.created_at.replace(" ", "T") + "Z" : null);
         
         updateDeviceStatus(true, timestamp);
@@ -74,7 +75,9 @@ export function initWebSocket() {
             document.getElementById('slider-humi').value = S.humi;
             document.getElementById('slider-wtemp').value = S.wtemp;
         }
-    });
+    }
+
+    socket.on("sensorUpdate", LihatMonitoring);
 }
 
 export async function checkAuth() {

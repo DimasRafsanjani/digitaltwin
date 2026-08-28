@@ -3,7 +3,7 @@
             window.location.href = '/';
         }
 
-        document.getElementById('btn-login').addEventListener('click', async () => {
+        async function Login() {
             const u = document.getElementById('auth-username').value;
             const p = document.getElementById('auth-password').value;
             const errDiv = document.getElementById('login-error');
@@ -30,9 +30,11 @@
                 errDiv.innerText = 'Server error';
                 errDiv.style.display = 'block';
             }
-        });
+        }
 
-        document.getElementById('btn-register').addEventListener('click', async () => {
+        document.getElementById('btn-login').addEventListener('click', Login);
+
+        async function Registrasi() {
             const u = document.getElementById('auth-username').value;
             const p = document.getElementById('auth-password').value;
             const errDiv = document.getElementById('login-error');
@@ -58,4 +60,6 @@
                 errDiv.innerText = 'Server error';
                 errDiv.style.display = 'block';
             }
-        });
+        }
+
+        document.getElementById('btn-register').addEventListener('click', Registrasi);

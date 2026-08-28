@@ -270,6 +270,83 @@ function createTiller(height, baseRadius, color, S, sunPos, leanFactor) {
     return tillerGroup;
 }
 
+// --- FUNGSI CLASS DIAGRAM LSystemPadi ---
+function PemetaanDataSensor(data) {
+    // === 1. ARAS / KECEPATAN TUMBUH (USIA & SUHU) ===
+    let tempFactor = 1.0 - Math.abs(data.atemp - 27.5) / 25;
+    tempFactor = THREE.MathUtils.clamp(tempFactor, 0.4, 1.0);
+
+    let maxTillersTDS = Math.floor(THREE.MathUtils.mapLinear(data.tds, 0, 1500, 1, 10));
+    maxTillersTDS = THREE.MathUtils.clamp(maxTillersTDS, 1, 12);
+
+    let tillers = Math.floor(THREE.MathUtils.mapLinear(data.age * tempFactor, 1, 60, 1, maxTillersTDS));
+    if (data.age > 60) tillers = Math.min(maxTillersTDS, Math.floor(maxTillersTDS * tempFactor + 2));
+
+    let growthScale = THREE.MathUtils.mapLinear(data.age * tempFactor, 1, 80, 0.15, 1.0);
+    growthScale = THREE.MathUtils.clamp(growthScale, 0.15, 1.0);
+
+    // === 2. ETIOLASI & PHOTOTROPISM (CAHAYA) ===
+    let yStretch = 1.0;
+    let xzStretch = 1.0;
+    if (data.light < 5000) {
+        yStretch = THREE.MathUtils.mapLinear(data.light, 0, 5000, 1.8, 1.0); // Meninggi (Etiolasi)
+        xzStretch = THREE.MathUtils.mapLinear(data.light, 0, 5000, 0.55, 1.0); // Menipis
+    }
+
+    let sunPos = new THREE.Vector3(10, 20, 10).normalize();
+    let leanFactor = THREE.MathUtils.mapLinear(data.light, 0, 50000, 0, 0.18);
+
+    // === 3. KESEHATAN & KLOROSIS (TDS, MOISTURE, SUHU) ===
+    let healthScore = (data.moisture / 100) * (Math.min(data.tds, 1200) / 1200) * tempFactor;
+
+    const healthyGreen = new THREE.Color(0x2f642a);
+    const chlorotic = new THREE.Color(0xbebe47);
+    const straw = new THREE.Color(0x9a8a42);
+    const burnt = new THREE.Color(0x403225);
+
+    let plantCol = healthyGreen.clone();
+    if (healthScore < 0.7) plantCol.lerp(chlorotic, 1 - (healthScore / 0.7));
+    if (data.light > 80000) plantCol.lerp(burnt, (data.light - 80000) / 40000); 
+    if (data.age > 85) plantCol.lerp(straw, THREE.MathUtils.clamp((data.age - 85) / 35, 0, 1)); 
+
+    const finalHeight = growthScale * yStretch * 3.6;
+    const tdsThickness = THREE.MathUtils.mapLinear(data.tds, 0, 2000, 0.55, 1.25);
+    const finalRadius = 0.008 * xzStretch * tdsThickness;
+    
+    return {
+        tillers, yStretch, xzStretch, sunPos, leanFactor, plantCol, finalHeight, finalRadius
+    };
+}
+
+function DerivasiString(Iterasi) {
+    let strukturDerivasi = [];
+    for (let t = 0; t < Iterasi; t++) {
+        const angle = (t / Iterasi) * Math.PI * 2;
+        const spreadRadius = (Iterasi === 1) ? 0 : 0.005 + (t * 0.003);
+        const yaw = angle + (Math.random() - 0.5) * 0.15;
+        const tiltAngle = (Iterasi === 1) ? 0.01 : 0.06 + (t * 0.015);
+        
+        strukturDerivasi.push({ angle, spreadRadius, yaw, tiltAngle });
+    }
+    return strukturDerivasi;
+}
+
+function InterpretasiLSystem(Derivasi, paramVisual) {
+    for (let i = 0; i < Derivasi.length; i++) {
+        const cabang = Derivasi[i];
+        
+        const tiller = createTiller(paramVisual.finalHeight, paramVisual.finalRadius, paramVisual.plantCol, S, paramVisual.sunPos, paramVisual.leanFactor);
+        tiller.position.set(Math.sin(cabang.angle) * cabang.spreadRadius, 0, Math.cos(cabang.angle) * cabang.spreadRadius);
+
+        tiller.rotation.y = cabang.yaw;
+        tiller.rotation.x = cabang.tiltAngle;
+
+        plantGroup.add(tiller);
+    }
+    
+    if (S.roots) buildRoots(paramVisual.tillers);
+}
+
 // --- BUILD PLANT MAIN CONTROL ---
 export function buildPlant() {
     plantGroup.clear();
@@ -279,71 +356,14 @@ export function buildPlant() {
     let phase = S.age >= 90 ? "Fase Pematangan" : (S.age >= 60 ? "Fase Reproduktif" : "Fase Vegetatif");
     document.getElementById('stage-display').innerText = phase + " | " + AppState.deviceStatus;
 
-    // === 1. ARAS / KECEPATAN TUMBUH (USIA & SUHU) ===
-    let tempFactor = 1.0 - Math.abs(S.atemp - 27.5) / 25;
-    tempFactor = THREE.MathUtils.clamp(tempFactor, 0.4, 1.0);
+    // Alur L-System Sesuai Class Diagram
+    const ParameterVisual = PemetaanDataSensor(S);
+    const StringDerivasi = DerivasiString(ParameterVisual.tillers);
+    InterpretasiLSystem(StringDerivasi, ParameterVisual);
+}
 
-    // Jumlah anakan diatur oleh TDS (Nutrisi)
-    let maxTillersTDS = Math.floor(THREE.MathUtils.mapLinear(S.tds, 0, 1500, 1, 10));
-    maxTillersTDS = THREE.MathUtils.clamp(maxTillersTDS, 1, 12);
-
-    let tillers = Math.floor(THREE.MathUtils.mapLinear(S.age * tempFactor, 1, 60, 1, maxTillersTDS));
-    if (S.age > 60) tillers = Math.min(maxTillersTDS, Math.floor(maxTillersTDS * tempFactor + 2));
-
-    // Tinggi Padi
-    let growthScale = THREE.MathUtils.mapLinear(S.age * tempFactor, 1, 80, 0.15, 1.0);
-    growthScale = THREE.MathUtils.clamp(growthScale, 0.15, 1.0);
-
-    // === 2. ETIOLASI & PHOTOTROPISM (CAHAYA) ===
-    let yStretch = 1.0;
-    let xzStretch = 1.0;
-    if (S.light < 5000) {
-        yStretch = THREE.MathUtils.mapLinear(S.light, 0, 5000, 1.8, 1.0); // Meninggi (Etiolasi)
-        xzStretch = THREE.MathUtils.mapLinear(S.light, 0, 5000, 0.55, 1.0); // Menipis
-    }
-
-    let sunPos = new THREE.Vector3(10, 20, 10).normalize();
-    let leanFactor = THREE.MathUtils.mapLinear(S.light, 0, 50000, 0, 0.18); // Kecondongan ke arah matahari
-
-    // === 3. KESEHATAN & KLOROSIS (TDS, MOISTURE, SUHU) ===
-    let healthScore = (S.moisture / 100) * (Math.min(S.tds, 1200) / 1200) * tempFactor;
-
-    const healthyGreen = new THREE.Color(0x2f642a);
-    const chlorotic = new THREE.Color(0xbebe47);
-    const straw = new THREE.Color(0x9a8a42);
-    const burnt = new THREE.Color(0x403225);
-
-    let plantCol = healthyGreen.clone();
-    if (healthScore < 0.7) plantCol.lerp(chlorotic, 1 - (healthScore / 0.7));
-    if (S.light > 80000) plantCol.lerp(burnt, (S.light - 80000) / 40000); // Terbakar cahaya berlebih
-    if (S.age > 85) plantCol.lerp(straw, THREE.MathUtils.clamp((S.age - 85) / 35, 0, 1)); // Layu menguning panen
-
-    // === 4. GENERATE RUMPUN PADI ---
-    const finalHeight = growthScale * yStretch * 3.6;
-    const tdsThickness = THREE.MathUtils.mapLinear(S.tds, 0, 2000, 0.55, 1.25);
-    const finalRadius = 0.008 * xzStretch * tdsThickness; // Batang padi ramping/kurus
-
-    for (let t = 0; t < tillers; t++) {
-        const angle = (t / tillers) * Math.PI * 2;
-        // Rumpun tumbuh sangat rapat berdesakan (khas rumput)
-        const spreadRadius = (tillers === 1) ? 0 : 0.005 + (t * 0.003);
-
-        // Generate anakan prosedural
-        const tiller = createTiller(finalHeight, finalRadius, plantCol, S, sunPos, leanFactor);
-        tiller.position.set(Math.sin(angle) * spreadRadius, 0, Math.cos(angle) * spreadRadius);
-
-        // yaw (Y) memutarkan anakan, pitch (X) mencondongkan anakan keluar secara radial
-        tiller.rotation.y = angle + (Math.random() - 0.5) * 0.15;
-        // Anakan padi tumbuh lurus tegak ke atas, tidak terlalu mekar
-        const tiltAngle = (tillers === 1) ? 0.01 : 0.06 + (t * 0.015);
-        tiller.rotation.x = tiltAngle;
-
-        plantGroup.add(tiller);
-    }
-
-    if (S.roots) buildRoots();
     // --- ENHANCED Root System (Branching L-System - Akar Serabut Organik & Meliuk) ---
-    function buildRoots() {
+    function buildRoots(tillers) {
         let rootCol = new THREE.Color(0xf5f0e1);
         if (S.wtemp > 35 || S.wtemp < 18) rootCol.set(0x4a3a2a); // Stress browning akibat suhu air ekstrem
         let mat = new THREE.MeshBasicMaterial({ color: rootCol, transparent: true, opacity: 0.7 });

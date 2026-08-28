@@ -81,41 +81,46 @@ let db;
 
 const SECRET_KEY = "TwinSecr3tK3y_2026";
 
-// --- ENDPOINT AUTENTIKASI ---
+// --- FUNGSI CLASS DIAGRAM ---
+async function VerifikasiAkun(username, password, isRegister, res) {
+  if (isRegister) {
+    if (!username || !password) return res.status(400).json({ error: "Username dan password dibutuhkan." });
+    try {
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash(password, salt);
+      await db.run("INSERT INTO users (username, password_hash) VALUES (?, ?)", [username, hash]);
+      res.status(201).json({ message: "Registrasi berhasil, silakan login." });
+    } catch (err) {
+      if (err.message.includes("UNIQUE constraint failed")) {
+        return res.status(400).json({ error: "Username sudah digunakan, silakan pilih yang lain." });
+      }
+      res.status(500).json({ error: err.message });
+    }
+  } else {
+    try {
+      const user = await db.get("SELECT * FROM users WHERE username = ?", [username]);
+      if (!user) return res.status(401).json({ error: "Username tidak ditemukan." });
+
+      const validPass = await bcrypt.compare(password, user.password_hash);
+      if (!validPass) return res.status(401).json({ error: "Kata sandi salah." });
+
+      // Cetak Token JWT berlaku 24 Jam
+      const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
+      res.status(200).json({ message: "Login berhasil", token });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+}
+
 // Endpoint Registrasi Pengguna
 app.post('/api/register', async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ error: "Username dan password dibutuhkan." });
-  
-  try {
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(password, salt);
-    await db.run("INSERT INTO users (username, password_hash) VALUES (?, ?)", [username, hash]);
-    res.status(201).json({ message: "Registrasi berhasil, silakan login." });
-  } catch (err) {
-    if (err.message.includes("UNIQUE constraint failed")) {
-      return res.status(400).json({ error: "Username sudah digunakan, silakan pilih yang lain." });
-    }
-    res.status(500).json({ error: err.message });
-  }
+  await VerifikasiAkun(req.body.username, req.body.password, true, res);
 });
 
 // Endpoint Login
 app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
-  try {
-    const user = await db.get("SELECT * FROM users WHERE username = ?", [username]);
-    if (!user) return res.status(401).json({ error: "Username tidak ditemukan." });
-
-    const validPass = await bcrypt.compare(password, user.password_hash);
-    if (!validPass) return res.status(401).json({ error: "Kata sandi salah." });
-
-    // Cetak Token JWT berlaku 24 Jam
-    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
-    res.status(200).json({ message: "Login berhasil", token });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  await VerifikasiAkun(req.body.username, req.body.password, false, res);
 });
 
 // --- MIDDLEWARE & ENDPOINT PENGATURAN PENGGUNA ---
@@ -181,8 +186,33 @@ io.on('connection', async (socket) => {
   }
 });
 
-// Endpoint API untuk ESP32 mengirim data (HTTP POST)
-app.post('/api/sensor', async (req, res) => {
+// --- FUNGSI CLASS DIAGRAM SENSOR ---
+async function SimpanLog(data) {
+  const { suhu_udara, kelembapan_udara, suhu_air, kelembapan_tanah, tds_nutrisi, intensitas_cahaya, baterai, sensor_status } = data;
+  await db.run(
+    `INSERT INTO sensor_logs (suhu_udara, kelembapan_udara, suhu_air, kelembapan_tanah, tds_nutrisi, intensitas_cahaya, baterai, sensor_status) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [suhu_udara, kelembapan_udara, suhu_air, kelembapan_tanah, tds_nutrisi, intensitas_cahaya, baterai, sensor_status]
+  );
+}
+
+function BroadcastData(data) {
+  const { suhu_udara, kelembapan_udara, suhu_air, kelembapan_tanah, tds_nutrisi, intensitas_cahaya, baterai, sensor_status } = data;
+  io.emit('sensorUpdate', {
+    suhu_udara,
+    kelembapan_udara,
+    suhu_air,
+    kelembapan_tanah,
+    tds_nutrisi,
+    intensitas_cahaya,
+    baterai,
+    sensor_status,
+    esp_status: true,
+    timestamp: new Date().toISOString()
+  });
+}
+
+async function TerimaDataSensor(req, res) {
   const signature = req.headers['x-signature'];
   const timestamp = req.headers['x-timestamp'];
   const { suhu_udara, kelembapan_udara, suhu_air, kelembapan_tanah, tds_nutrisi, intensitas_cahaya, baterai, sensor_status } = req.body;
@@ -223,33 +253,17 @@ app.post('/api/sensor', async (req, res) => {
   console.log("\n[API] Menerima data sensor baru (Authorized via HMAC-SHA256):", req.body);
 
   try {
-    // 1. Simpan ke database
-    await db.run(
-      `INSERT INTO sensor_logs (suhu_udara, kelembapan_udara, suhu_air, kelembapan_tanah, tds_nutrisi, intensitas_cahaya, baterai, sensor_status) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [suhu_udara, kelembapan_udara, suhu_air, kelembapan_tanah, tds_nutrisi, intensitas_cahaya, baterai, sensor_status]
-    );
-
-    // 2. Broadcast ke semua browser terhubung via WebSockets
-    io.emit('sensorUpdate', {
-      suhu_udara,
-      kelembapan_udara,
-      suhu_air,
-      kelembapan_tanah,
-      tds_nutrisi,
-      intensitas_cahaya,
-      baterai,
-      sensor_status,
-      esp_status: true,
-      timestamp: new Date().toISOString()
-    });
-
+    await SimpanLog(req.body);
+    BroadcastData(req.body);
     res.status(200).json({ status: "success", message: "Data received and broadcasted" });
   } catch (err) {
     console.error("Database error:", err.message);
     res.status(500).json({ status: "error", message: err.message });
   }
-});
+}
+
+// Endpoint API untuk ESP32 mengirim data (HTTP POST)
+app.post('/api/sensor', TerimaDataSensor);
 
 // Endpoint untuk melihat log data terakhir di browser
 app.get('/api/sensor/latest', async (req, res) => {
