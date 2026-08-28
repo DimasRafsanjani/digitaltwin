@@ -30,8 +30,11 @@ export function initWebSocket() {
         }
     });
 
-    // --- FUNGSI CLASS DIAGRAM ---
-    function LihatMonitoring(data) {
+    socket.on("sensorUpdate", LihatMonitoring);
+}
+
+// --- FUNGSI CLASS DIAGRAM ---
+export function LihatMonitoring(data) {
         const timestamp = data.timestamp || (data.created_at ? data.created_at.replace(" ", "T") + "Z" : null);
         
         updateDeviceStatus(true, timestamp);
@@ -76,8 +79,6 @@ export function initWebSocket() {
             document.getElementById('slider-wtemp').value = S.wtemp;
         }
     }
-
-    socket.on("sensorUpdate", LihatMonitoring);
 }
 
 export async function checkAuth() {
@@ -97,8 +98,17 @@ export async function checkAuth() {
                     updateAgeFromPlantingDate(data.planting_date);
                 }
             }
+
+            // Fetch data terakhir agar model langsung muncul meskipun alat sedang offline
+            const resSensor = await fetch('/api/sensor/latest');
+            if (resSensor.ok) {
+                const latestData = await resSensor.json();
+                if (latestData && latestData.kelembapan_tanah !== undefined) {
+                    LihatMonitoring(latestData);
+                }
+            }
         } catch (err) {
-            console.error("[API] Gagal mengambil data tanggal tanam:", err);
+            console.error("[API] Gagal mengambil data awal:", err);
         }
     } else {
         window.location.href = '/login.html';

@@ -1,6 +1,6 @@
 import { S, AppState } from './state.js';
 
-let scene, cam, ren, ctrl, box, ambient, sun, fill, ground, rootGroup, plantGroup;
+let scene, cam, ren, ctrl, box, ambient, sun, fill, ground, rootGroup, plantGroup, stats;
 
 export function initScene() {
     // --- THREE.JS Setup ---
@@ -60,8 +60,16 @@ export function initScene() {
     // Inisiasi awal status
     console.log('Procedural L-System Rice Plant Generator Active.');
 
-    // --- PROCEDURAL GENERATION: LEAF L-SYSTEM ---
-
+    // --- Setup FPS Stats Monitor (NF-03) ---
+    if (window.Stats) {
+        stats = new window.Stats();
+        stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+        stats.dom.style.position = 'absolute';
+        stats.dom.style.top = '0px';
+        stats.dom.style.left = '0px';
+        stats.dom.style.zIndex = '100';
+        box.appendChild(stats.dom);
+    }
 }
 
 function createLeaf(length, width, color, wiltAngle, heightRatio) {
@@ -463,8 +471,12 @@ export function animate() {
     let ambientIntensity = THREE.MathUtils.mapLinear(S.light, 0, 100000, 0.2, 0.7);
     ambient.intensity = ambientIntensity;
 
+    if (stats) stats.begin();
+    
     ctrl.update();
     ren.render(scene, cam);
+    
+    if (stats) stats.end();
 }
 
 
