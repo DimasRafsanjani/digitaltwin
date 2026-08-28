@@ -2,8 +2,8 @@ const crypto = require('crypto');
 const http = require('http');
 
 const SECRET_KEY = "TwinSecr3tK3y_2026";
-const PORT = 3000;
-const HOST = "localhost";
+const PORT = 80;
+const HOST = "skripsi.dimassraf.space";
 
 // Konfigurasi Siklus Simulasi Deep Sleep (dipercepat untuk keperluan demonstrasi sidang)
 const WAKE_DURATION_MS = 15000;  // Simulasi alat menyala selama 15 detik (Kirim Data)
@@ -64,7 +64,7 @@ function sendSimulatedData() {
     res.on('data', (chunk) => { data += chunk; });
     res.on('end', () => {
       console.log(`[${new Date().toLocaleTimeString()}] Data terkirim (Status: ${res.statusCode}).`);
-      
+
       // Setelah data terkirim, masuk ke mode Deep Sleep
       console.log(`[ESP32 SLEEPING] Masuk mode hemat daya selama ${SLEEP_DURATION_MS / 1000} detik...`);
       setTimeout(sendSimulatedData, SLEEP_DURATION_MS);

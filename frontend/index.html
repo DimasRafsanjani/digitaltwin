@@ -7,9 +7,11 @@
     <title>Rice Digital Shadow 3D - Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <!-- Bypass Cloudflare Rocket Loader untuk pustaka eksternal -->
+    <script data-cfasync="false" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script data-cfasync="false" src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script data-cfasync="false" src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 
 <body>
@@ -133,7 +135,8 @@
         </div>
     </div>
 
-    <script type="module" src="js/main.js"></script>
+    <!-- Bypass Cloudflare Rocket Loader karena sering merusak script ES6 Module -->
+    <script data-cfasync="false" type="module" src="js/main.js"></script>
 </body>
 
 </html>
