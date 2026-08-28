@@ -222,6 +222,7 @@ export function initUI() {
             const dd = String(defaultDate.getDate()).padStart(2, '0');
             const formattedDate = `${yyyy}-${mm}-${dd}`;
             dateInput.value = formattedDate;
+            localStorage.setItem('planting_date', formattedDate);
             updateAgeFromPlantingDate(formattedDate);
         }
     }
@@ -254,8 +255,12 @@ export function initUI() {
         S.sensor_status = realData.sensor_status;
 
         const savedDate = localStorage.getItem('planting_date');
+        const dateInput = document.getElementById('input-planting-date');
+        
         if (savedDate) {
             updateAgeFromPlantingDate(savedDate);
+        } else if (dateInput && dateInput.value) {
+            updateAgeFromPlantingDate(dateInput.value);
         }
 
         document.getElementById('slider-moisture').value = S.moisture;
