@@ -370,6 +370,42 @@ input[type=range]::-webkit-slider-thumb {
   font-size: 0.75rem;
   color: #5a6b82;
   border-top: 1px solid #2a3547;
-  padding-top: 15px;
   line-height: 1.4;
+}
+
+/* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 768px) {
+  html, body {
+    overflow-y: auto;
+    height: auto;
+  }
+  .dashboard-container {
+    flex-direction: column;
+    height: auto;
+  }
+  .sidebar {
+    width: 100%;
+    order: 2; /* Posisikan sidebar (kontrol sensor) di bawah 3D */
+    box-sizing: border-box;
+    padding: 20px;
+    border-right: none;
+    border-top: 1px solid var(--glass-border);
+  }
+  .main-viewport {
+    order: 1; /* Posisikan model 3D di atas */
+    height: 60vh; /* Tinggi model 60% layar HP agar bisa di-scroll ke bawah */
+    width: 100%;
+    flex: none;
+  }
+  .stage-badge {
+    top: 15px;
+    right: 15px;
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+  .instruction-hint {
+    bottom: 15px;
+    right: 15px;
+    font-size: 10px;
+  }
 }
