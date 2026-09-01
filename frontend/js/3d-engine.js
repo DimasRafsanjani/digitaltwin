@@ -1,4 +1,4 @@
-import { S, AppState } from './state.js';
+import { S, AppState, GrowthState, PredictiveState } from './state.js';
 
 let scene, cam, ren, ctrl, box, ambient, sun, fill, ground, rootGroup, plantGroup, stats;
 
@@ -206,8 +206,11 @@ function createTiller(height, baseRadius, color, S, sunPos, leanFactor) {
     const stalkMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.75 });
     let currentParent = tillerGroup;
 
-    // Batang layu merunduk jika tanah kering
-    const stalkWilt = S.moisture < 45 ? THREE.MathUtils.mapLinear(S.moisture, 0, 45, 0.35, 0) : 0.0;
+    // Batang layu merunduk jika terjadi stres air (menggunakan Cumulative Stress / Smoothed Moisture)
+    const effectiveWilt = S.wiltStressLevel !== undefined && S.wiltStressLevel > 0 
+        ? S.wiltStressLevel 
+        : (S.moisture < 45 ? THREE.MathUtils.mapLinear(S.moisture, 0, 45, 1.0, 0) : 0.0);
+    const stalkWilt = effectiveWilt * 0.35;
 
     for (let i = 0; i < segments; i++) {
         const currentRadius = baseRadius * (1.0 - (i / segments) * 0.5);
@@ -241,7 +244,7 @@ function createTiller(height, baseRadius, color, S, sunPos, leanFactor) {
             const leafLen = normalHeight * 0.85 * (1.0 - ratio * 0.3);
             // Daun padi sempit memanjang
             const leafWidth = Math.max(currentRadius * 5.0, 0.018);
-            const activeWilt = S.moisture < 45 ? THREE.MathUtils.mapLinear(S.moisture, 0, 45, 1.3, 0) : 0.0;
+            const activeWilt = effectiveWilt * 1.3;
 
             // 1. Tambah Pelepah Daun (Leaf Sheath) untuk membungkus batang
             const sheathGeo = new THREE.CylinderGeometry(currentRadius * 1.15, currentRadius * 1.25, segLen * 0.28, 8);
@@ -287,8 +290,16 @@ function PemetaanDataSensor(data) {
     let maxTillersTDS = Math.floor(THREE.MathUtils.mapLinear(data.tds, 0, 1500, 1, 10));
     maxTillersTDS = THREE.MathUtils.clamp(maxTillersTDS, 1, 12);
 
-    let tillers = Math.floor(THREE.MathUtils.mapLinear(data.age * tempFactor, 1, 60, 1, maxTillersTDS));
-    if (data.age > 60) tillers = Math.min(maxTillersTDS, Math.floor(maxTillersTDS * tempFactor + 2));
+    let calculatedTillers = Math.floor(THREE.MathUtils.mapLinear(data.age * tempFactor, 1, 60, 1, maxTillersTDS));
+    if (data.age > 60) calculatedTillers = Math.min(maxTillersTDS, Math.floor(maxTillersTDS * tempFactor + 2));
+
+    // Monotonic constraint: jumlah anakan tidak susut karena fluktuasi drop 10 menit
+    const isManualSim = document.getElementById('btn-reset-real')?.style.display === 'block';
+    let tillers = calculatedTillers;
+    if (!isManualSim) {
+        tillers = Math.max(calculatedTillers, GrowthState.maxEstablishedTillers || 1);
+        GrowthState.maxEstablishedTillers = tillers;
+    }
 
     let growthScale = THREE.MathUtils.mapLinear(data.age * tempFactor, 1, 80, 0.15, 1.0);
     growthScale = THREE.MathUtils.clamp(growthScale, 0.15, 1.0);
@@ -317,7 +328,13 @@ function PemetaanDataSensor(data) {
     if (data.light > 80000) plantCol.lerp(burnt, (data.light - 80000) / 40000); 
     if (data.age > 85) plantCol.lerp(straw, THREE.MathUtils.clamp((data.age - 85) / 35, 0, 1)); 
 
-    const finalHeight = growthScale * yStretch * 3.6;
+    const rawHeight = growthScale * yStretch * 3.6;
+    let finalHeight = rawHeight;
+    if (!isManualSim) {
+        finalHeight = Math.max(rawHeight, (GrowthState.maxEstablishedHeight || 0) * 0.95);
+        GrowthState.maxEstablishedHeight = Math.max(GrowthState.maxEstablishedHeight || 0, finalHeight);
+    }
+
     const tdsThickness = THREE.MathUtils.mapLinear(data.tds, 0, 2000, 0.55, 1.25);
     const finalRadius = 0.008 * xzStretch * tdsThickness;
     

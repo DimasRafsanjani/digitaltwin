@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rice Digital Shadow 3D - Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    
+    <link rel="stylesheet" href="/css/style.css">
+
     <!-- Bypass Cloudflare Rocket Loader untuk pustaka eksternal -->
     <script data-cfasync="false" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script data-cfasync="false" src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -53,7 +53,8 @@
                         <span class="value" id="val-wtemp">26 °C</span>
                         <div class="unit">DS18B20 Irigasi</div>
                     </div>
-                    <div class="sensor-card" style="grid-column: span 2; border: 1px solid #2a3547; background: #0c1015; margin-top: 5px;">
+                    <div class="sensor-card"
+                        style="grid-column: span 2; border: 1px solid #2a3547; background: #0c1015; margin-top: 5px;">
                         <label style="color: #a0aec0; margin-bottom: 6px;">Tanggal Tanam (Planting Date)</label>
                         <input type="date" id="input-planting-date"
                             style="width: 100%; border-radius: 4px; padding: 6px; background: #131921; color: #fff; border: 1px solid #2a3547; cursor: pointer; font-family: inherit; font-size: 0.85rem; box-sizing: border-box;">
@@ -62,67 +63,152 @@
             </div>
 
             <div class="sidebar-section" style="margin-top: 25px;">
-                <h3
-                    style="color: #88aaff; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase; margin: 0 0 15px 0; border-bottom: 1px solid #1a222f; padding-bottom: 8px;">
-                    Kesehatan Sistem (Node Sawah)</h3>
-                <div class="sensor-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1a222f; padding-bottom: 8px; margin-bottom: 15px;">
+                    <h3
+                        style="color: #88aaff; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase; margin: 0;">
+                        Kesehatan Sistem (Node Sawah)
+                    </h3>
+                    <button id="btn-open-db-modal" class="btn-open-db-stylish">
+                        Backup &amp; Recovery
+                    </button>
+                </div>
+                <div class="sensor-grid" style="grid-template-columns: repeat(2, 1fr);">
                     <div class="sensor-card">
                         <label>Sisa Baterai</label>
                         <span class="value" id="val-battery" style="color: #94a3b8;">--%</span>
-                        <div class="unit">18650 Li-Ion</div>
+                        <div class="unit">18650 Li-Ion (Alert &lt;20%)</div>
                     </div>
                     <div class="sensor-card">
                         <label>Koneksi ESP32</label>
-                        <span class="value" id="val-esp-status" style="color: #94a3b8; font-size: 1.1rem;">Waiting...</span>
+                        <span class="value" id="val-esp-status"
+                            style="color: #94a3b8; font-size: 1.1rem;">Waiting...</span>
                         <div class="unit">GPRS / WiFi</div>
                     </div>
                     <div class="sensor-card">
                         <label>Status Sensor</label>
-                        <span class="value" id="val-sensor-status" style="color: #94a3b8; font-size: 1.1rem;">Waiting...</span>
-                        <div class="unit">Koneksi Kabel</div>
+                        <span class="value" id="val-sensor-status"
+                            style="color: #94a3b8; font-size: 1.1rem;">Waiting...</span>
+                        <div class="unit">Koneksi Hardware</div>
+                    </div>
+                    <div class="sensor-card">
+                        <label>Sisa Kuota SIM</label>
+                        <span class="value" id="val-quota" style="color: #38bdf8;">5.00 GB</span>
+                        <div class="unit" id="val-quota-sub">~86 KB/hari (10 mnt/pkt)</div>
                     </div>
                 </div>
-                <div id="val-last-update" style="font-size: 0.75rem; color: #64748b; margin-top: 12px; text-align: right; font-style: italic;">
+                <div id="val-last-update"
+                    style="font-size: 0.75rem; color: #64748b; margin-top: 10px; text-align: right; font-style: italic;">
                     Terakhir Update: Belum ada data
                 </div>
+            </div>
+
+            <!-- PREDICTIVE DIGITAL TWIN (REVISI SIDANG POIN 1) -->
+            <div class="sidebar-section"
+                style="margin-top: 25px; background: rgba(59, 130, 246, 0.04); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 14px;">
+                <h3
+                    style="color: #60a5fa; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase; margin: 0 0 10px 0; border-bottom: 1px solid rgba(59, 130, 246, 0.2); padding-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>🔮</span> Proyeksi Pertumbuhan (Predictive)
+                </h3>
+                <p style="font-size: 0.75rem; color: #94a3b8; margin: 0 0 12px 0; line-height: 1.3;">
+                    Simulasi kondisi tanaman padi pada tanggal mendatang dengan variasi nutrisi dan air:
+                </p>
+                <div class="control-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 0.75rem; color: #cbd5e1; margin-bottom: 4px; display: block;">Target
+                        Tanggal Proyeksi:</label>
+                    <input type="date" id="pred-target-date"
+                        style="width: 100%; border-radius: 4px; padding: 5px 8px; background: #131921; color: #fff; border: 1px solid #3b82f6; font-size: 0.8rem; box-sizing: border-box;">
+                </div>
+                <div class="control-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 0.75rem; color: #cbd5e1; margin-bottom: 4px; display: block;">Skenario
+                        Dosis Nutrisi (TDS):</label>
+                    <select id="pred-nutrient-scenario"
+                        style="width: 100%; border-radius: 4px; padding: 6px; background: #131921; color: #fff; border: 1px solid #2a3547; font-size: 0.8rem;">
+                        <option value="low">Defisiensi / Rendah (&lt;400 ppm - Klorosis)</option>
+                        <option value="optimal" selected>Dosis Optimal (600 - 900 ppm - Ideal)</option>
+                        <option value="excess">Dosis Berlebih (&gt;1500 ppm - Toksisitas)</option>
+                    </select>
+                </div>
+                <div class="control-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 0.75rem; color: #cbd5e1; margin-bottom: 4px; display: block;">Skenario
+                        Manajemen Air:</label>
+                    <select id="pred-water-scenario"
+                        style="width: 100%; border-radius: 4px; padding: 6px; background: #131921; color: #fff; border: 1px solid #2a3547; font-size: 0.8rem;">
+                        <option value="dry">Kering / Cekaman Air (Kelembapan 35% - Layu)</option>
+                        <option value="optimal" selected>Irigasi Intermiten / Cukup (Kelembapan 80%)</option>
+                        <option value="flooded">Tergenang Penuh (Kelembapan 100%)</option>
+                    </select>
+                </div>
+
+                <!-- Hasil Analisis Prediksi -->
+                <div id="pred-results-box"
+                    style="background: rgba(0, 0, 0, 0.4); border-radius: 6px; padding: 10px; font-size: 0.75rem; color: #e2e8f0; margin-bottom: 12px; border-left: 3px solid #3b82f6;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Proyeksi Umur:</span> <strong id="pred-res-age" style="color: #60a5fa;">60 HST</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Est. Tinggi Tanaman:</span> <strong id="pred-res-height" style="color: #4ade80;">~72
+                            cm</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Est. Jumlah Anakan:</span> <strong id="pred-res-tillers" style="color: #4ade80;">~7
+                            Batang</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Fase &amp; Status:</span> <strong id="pred-res-phase" style="color: #facc15;">Vegetatif
+                            Aktif</strong>
+                    </div>
+                </div>
+
+                <button id="btn-apply-prediction"
+                    style="width: 100%; background: #2563eb; color: #fff; border: none; padding: 8px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; font-family: inherit; transition: 0.3s;">
+                    🚀 Terapkan Visual ke 3D Twin
+                </button>
             </div>
 
             <div class="sidebar-section" style="margin-top: 25px;">
                 <h3
                     style="color: #88aaff; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase; margin: 0 0 15px 0; border-bottom: 1px solid #1a222f; padding-bottom: 8px;">
-                    Simulasi Pertumbuhan</h3>
+                    Simulasi Manual Parameter</h3>
 
                 <div class="controls">
                     <button id="btn-reset-real" class="toggle-btn"
                         style="display: none; background: #1b5e20; color: #ffffff; border: 1px solid #2e7d32; width: 100%; margin-bottom: 15px; font-weight: 600; padding: 10px; border-radius: 4px; cursor: pointer; font-family: inherit;">
-                        Reset ke Data Real-Time
+                        Kembali ke Data Real-Time
                     </button>
                     <div class="control-group">
-                        <label>Umur Tumbuh (Hari 1-120) <span id="slider-age-val" style="float: right; color: #88aaff; font-weight: 600;">60</span></label>
+                        <label>Umur Tumbuh (Hari 1-120) <span id="slider-age-val"
+                                style="float: right; color: #88aaff; font-weight: 600;">60</span></label>
                         <input type="range" id="slider-age" min="1" max="120" value="60">
                     </div>
                     <div class="control-group">
-                        <label>Kelembapan Tanah (%) [Wilt/Roots] <span id="slider-moisture-val" style="float: right; color: #88aaff; font-weight: 600;">85</span></label>
+                        <label>Kelembapan Tanah (%) [Wilt/Roots] <span id="slider-moisture-val"
+                                style="float: right; color: #88aaff; font-weight: 600;">85</span></label>
                         <input type="range" id="slider-moisture" min="0" max="100" value="85">
                     </div>
                     <div class="control-group">
-                        <label>Suhu Udara (°C) [Growth/Color] <span id="slider-atemp-val" style="float: right; color: #88aaff; font-weight: 600;">28</span></label>
+                        <label>Suhu Udara (°C) [Growth/Color] <span id="slider-atemp-val"
+                                style="float: right; color: #88aaff; font-weight: 600;">28</span></label>
                         <input type="range" id="slider-atemp" min="0" max="50" value="28">
                     </div>
                     <div class="control-group">
-                        <label>Kelembapan Udara (%) [Fog/Stem/Fruit] <span id="slider-humi-val" style="float: right; color: #88aaff; font-weight: 600;">65</span></label>
+                        <label>Kelembapan Udara (%) [Fog/Stem/Fruit] <span id="slider-humi-val"
+                                style="float: right; color: #88aaff; font-weight: 600;">65</span></label>
                         <input type="range" id="slider-humi" min="0" max="100" value="65">
                     </div>
                     <div class="control-group">
-                        <label>Nutrisi (TDS ppm) [Chlorosis/Fruit] <span id="slider-tds-val" style="float: right; color: #88aaff; font-weight: 600;">600</span></label>
+                        <label>Nutrisi (TDS ppm) [Chlorosis/Fruit] <span id="slider-tds-val"
+                                style="float: right; color: #88aaff; font-weight: 600;">600</span></label>
                         <input type="range" id="slider-tds" min="0" max="2000" value="600">
                     </div>
                     <div class="control-group">
-                        <label>Cahaya (Lux) [Phototropism/Etiolation] <span id="slider-light-val" style="float: right; color: #88aaff; font-weight: 600;">12000</span></label>
+                        <label>Cahaya (Lux) [Phototropism/Etiolation] <span id="slider-light-val"
+                                style="float: right; color: #88aaff; font-weight: 600;">12000</span></label>
                         <input type="range" id="slider-light" min="0" max="40000" value="12000">
                     </div>
                     <div class="control-group">
-                        <label>Suhu Air (°C) [Roots] <span id="slider-wtemp-val" style="float: right; color: #88aaff; font-weight: 600;">26</span></label>
+                        <label>Suhu Air (°C) [Roots] <span id="slider-wtemp-val"
+                                style="float: right; color: #88aaff; font-weight: 600;">26</span></label>
                         <input type="range" id="slider-wtemp" min="0" max="50" value="26">
                     </div>
                     <button id="toggle-soil" class="toggle-btn active">Toggle Media Tanah</button>
@@ -134,6 +220,67 @@
             <div id="threejs-container"></div>
             <div class="stage-badge" id="stage-display">Loading Model...</div>
             <div class="instruction-hint">Gunakan Mouse/Sentuh untuk Putar & Zoom</div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER (FLOATS ON TOP-RIGHT ABOVE ALL MODALS) -->
+    <div id="toast-container"></div>
+
+    <!-- MODAL DATABASE BACKUP & DISASTER RECOVERY -->
+    <div id="db-modal" class="glass-modal-overlay">
+        <div class="glass-modal-card">
+            <div class="glass-modal-header">
+                <h3>Database &amp; Disaster Recovery</h3>
+                <button id="btn-close-db-modal" class="modal-close-btn" title="Tutup Modal">✕</button>
+            </div>
+            <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.45; margin: 0 0 18px 0;">
+                Mekanisme pencadangan snapshot data telemetri sensor dan akun pengguna untuk mengantisipasi kegagalan
+                server / kehilangan data.
+            </p>
+
+            <div class="modal-section-card">
+                <h4 style="color: #4ade80;">1. Unduh Cadangan Data (Backup Snapshot)</h4>
+                <p>Simpan seluruh log telemetri sensor, akun pengguna, dan pengaturan ke file JSON terstruktur.</p>
+                <button id="btn-download-backup" class="btn-modal-action btn-modal-green">
+                    Unduh Backup Snapshot (.json)
+                </button>
+            </div>
+
+            <div class="modal-section-card">
+                <h4 style="color: #f59e0b;">2. Pulihkan Database (Disaster Restore)</h4>
+                <p>Pilih file JSON cadangan untuk memulihkan seluruh data database dengan jaminan integritas transaksi.
+                </p>
+                <input type="file" id="input-restore-file" accept=".json" class="modal-input-field"
+                    style="width: 100%; box-sizing: border-box; margin-bottom: 12px; cursor: pointer;">
+                <button id="btn-execute-restore" class="btn-modal-action btn-modal-orange">
+                    Pulihkan Database Sekarang
+                </button>
+            </div>
+
+            <div class="modal-section-card" style="margin-bottom: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <h4 style="color: #38bdf8; margin: 0;">3. Notifikasi WhatsApp Alert</h4>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span id="wa-conn-status"
+                            style="font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.06); color: #94a3b8; font-weight: 500;">Memeriksa...</span>
+                        <button id="btn-reset-wa"
+                            style="background: transparent; border: none; color: #f87171; font-size: 0.72rem; cursor: pointer; text-decoration: underline; padding: 0;">Scan
+                            Ulang</button>
+                    </div>
+                </div>
+                <p>Kirim peringatan otomatis jika baterai kritis (&lt;20%) atau tanah kekeringan (&lt;45%) ke WhatsApp.
+                </p>
+                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                    <input type="text" id="input-wa-phone" placeholder="Contoh: 081234567890" class="modal-input-field"
+                        style="flex: 1;">
+                    <button id="btn-save-wa-phone" class="btn-modal-action btn-modal-blue"
+                        style="width: auto; padding: 8px 16px;">Simpan</button>
+                </div>
+                <button id="btn-test-wa" class="btn-modal-action btn-modal-blue"
+                    style="background: #1e3a8a; border: 1px solid #3b82f6;">
+                    Kirim Pesan Tes WhatsApp
+                </button>
+            </div>
         </div>
     </div>
 

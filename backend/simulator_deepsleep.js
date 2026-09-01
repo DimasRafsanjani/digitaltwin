@@ -3,8 +3,8 @@ const http = require('http');
 const https = require('https');
 
 const SECRET_KEY = "TwinSecr3tK3y_2026";
-const PORT = 443;
-const HOST = "skripsi.dimassraf.space";
+const PORT = 3000;
+const HOST = "localhost";
 
 // Konfigurasi Siklus Simulasi Deep Sleep (dipercepat untuk keperluan demonstrasi sidang)
 const WAKE_DURATION_MS = 15000;  // Simulasi alat menyala selama 15 detik (Kirim Data)

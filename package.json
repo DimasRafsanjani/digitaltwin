@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "start": "node backend/server.js",
     "dev": "vite -c frontend/vite.config.js",
     "build": "vite build -c frontend/vite.config.js",
     "preview": "vite preview -c frontend/vite.config.js"
